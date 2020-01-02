@@ -116,9 +116,12 @@ set(LIBUI_LIBS_DARWIN "-framework Foundation" "-framework AppKit")
 set(LIBUI_LIBS ${LIBUI_LIBS_DARWIN})
 
 add_library(ui STATIC ${LIBUI_SOURCES})
+target_link_libraries(ui ${LIBUI_LIBS})
+target_include_directories(ui PUBLIC ${libui_import_SOURCE_DIR})
 
 add_library(ui-shared SHARED ${LIBUI_SOURCES})
 target_link_libraries(ui-shared ${LIBUI_LIBS})
+target_include_directories(ui-shared PUBLIC ${libui_import_SOURCE_DIR})
 set_target_properties(ui-shared
         PROPERTIES OUTPUT_NAME libui)
 
