@@ -14,7 +14,7 @@ if(NOT libui_import_POPULATED)
   FetchContent_Populate(libui_import)
 endif()
 
-enable_language(C)
+enable_language(C CXX OBJC OBJCXX)
 
 project(libui)
 
@@ -118,15 +118,18 @@ set(LIBUI_LIBS_DARWIN "-framework Foundation" "-framework AppKit")
 #TODO set libs for gtk and windows
 set(LIBUI_LIBS ${LIBUI_LIBS_DARWIN})
 
-add_library(ui STATIC ${LIBUI_SOURCES})
-target_link_libraries(ui ${LIBUI_LIBS})
-target_include_directories(ui PUBLIC ${libui_import_SOURCE_DIR})
+if (LIBUI_STATIC_LIB)
+  add_library(ui STATIC ${LIBUI_SOURCES})
+  target_link_libraries(ui ${LIBUI_LIBS})
+  target_include_directories(ui PUBLIC ${libui_import_SOURCE_DIR})
+endif(LIBUI_STATIC_LIB)
 
-add_library(ui-shared SHARED ${LIBUI_SOURCES})
-target_link_libraries(ui-shared ${LIBUI_LIBS})
-target_include_directories(ui-shared PUBLIC ${libui_import_SOURCE_DIR})
-set_target_properties(ui-shared
-        PROPERTIES OUTPUT_NAME libui)
+if(LIBUI_SHARED_LIB)
+  add_library(ui-shared SHARED ${LIBUI_SOURCES})
+  target_link_libraries(ui-shared ${LIBUI_LIBS})
+  target_include_directories(ui-shared PUBLIC ${libui_import_SOURCE_DIR})
+  set_target_properties(ui-shared PROPERTIES OUTPUT_NAME ui)
+endif(LIBUI_SHARED_LIB)
 
 ##############################################################################
 # build example executables 
@@ -203,6 +206,13 @@ install(TARGETS ui
         RUNTIME DESTINATION bin
         INCLUDES DESTINATION include
         )
-export(TARGETS ui FILE libui.cmake)
-export(TARGETS ui-shared FILE libui-shared.cmake)
+
+if (LIBUI_STATIC_LIB)
+  export(TARGETS ui FILE libui.cmake)
+endif(LIBUI_STATIC_LIB)
+
+if (LIBUI_SHARED_LIB)
+  export(TARGETS ui-shared FILE libui-shared.cmake)
+endif(LIBUI_SHARED_LIB)
+
 export(PACKAGE LIBUI)
