@@ -21,6 +21,9 @@ project(libui)
 option(LIBUI_STATIC_LIB "build libui static library" ON)
 option(LIBUI_SHARED_LIB "build libui shared library" OFF)
 option(LIBUI_USE_SHARED_CRT "use shared crt library" ON)
+option(LIBUI_BUILD_EXAMPLES "build examples for libui" OFF)
+option(LIBUI_BUILD_TESTS "build tests for libui" OFF)
+
 
 if (MSVC)
 if (NOT LIBUI_USE_SHARED_CRT)
@@ -125,65 +128,73 @@ target_include_directories(ui-shared PUBLIC ${libui_import_SOURCE_DIR})
 set_target_properties(ui-shared
         PROPERTIES OUTPUT_NAME libui)
 
-#TODO add example executable
-set(EXAMPLE_DIR ${libui_import_SOURCE_DIR}/examples)
+##############################################################################
+# build example executables 
+##############################################################################
+if(LIBUI_BUILD_EXAMPLES)
+  set(EXAMPLE_DIR ${libui_import_SOURCE_DIR}/examples)
 
-add_executable(controlgallery ${EXAMPLE_DIR}/controlgallery/main.c)
-target_link_libraries(controlgallery ui ${LIBUI_LIBS})
+  add_executable(controlgallery ${EXAMPLE_DIR}/controlgallery/main.c)
+  target_link_libraries(controlgallery ui ${LIBUI_LIBS})
 
-add_executable(histogram ${EXAMPLE_DIR}/histogram/main.c)
-target_link_libraries(histogram ui ${LIBUI_LIBS})
+  add_executable(histogram ${EXAMPLE_DIR}/histogram/main.c)
+  target_link_libraries(histogram ui ${LIBUI_LIBS})
 
-add_executable(cpp-multithread ${EXAMPLE_DIR}/cpp-multithread/main.cpp)
-target_link_libraries(cpp-multithread ui ${LIBUI_LIBS})
-	# 	'deps':		[
-	# 		dependency('threads',
-	# 			required: true),
-	# 	],
-	# 	'cpp_args':	libui_example_cpp_extra_args,
-	# 	'link_args':	libui_example_cpp_extra_args,
-	# },
-	
-add_executable(drawtext ${EXAMPLE_DIR}/drawtext/main.c)
-target_link_libraries(drawtext ui ${LIBUI_LIBS})
+  add_executable(cpp-multithread ${EXAMPLE_DIR}/cpp-multithread/main.cpp)
+  target_link_libraries(cpp-multithread ui ${LIBUI_LIBS})
+    #   'deps':    [
+    #     dependency('threads',
+    #       required: true),
+    #   ],
+    #   'cpp_args':  libui_example_cpp_extra_args,
+    #   'link_args':  libui_example_cpp_extra_args,
+    # },
+  
+  add_executable(drawtext ${EXAMPLE_DIR}/drawtext/main.c)
+  target_link_libraries(drawtext ui ${LIBUI_LIBS})
 
-add_executable(timer ${EXAMPLE_DIR}/timer/main.c)
-target_link_libraries(timer ui ${LIBUI_LIBS})
+  add_executable(timer ${EXAMPLE_DIR}/timer/main.c)
+  target_link_libraries(timer ui ${LIBUI_LIBS})
 
-add_executable(datetime ${EXAMPLE_DIR}/datetime/main.c)
-target_link_libraries(datetime ui ${LIBUI_LIBS})
+  add_executable(datetime ${EXAMPLE_DIR}/datetime/main.c)
+  target_link_libraries(datetime ui ${LIBUI_LIBS})
+endif(LIBUI_BUILD_EXAMPLES)
 
-#TODO add test executable
-set(TEST_DIR ${libui_import_SOURCE_DIR}/test)
-set(LIBUI_TEST_SOURCES 
-  ${TEST_DIR}/drawtests.c
-  ${TEST_DIR}/images.c
-  ${TEST_DIR}/main.c
-  ${TEST_DIR}/menus.c
-  ${TEST_DIR}/page1.c
-  ${TEST_DIR}/page2.c
-  ${TEST_DIR}/page3.c
-  ${TEST_DIR}/page4.c
-  ${TEST_DIR}/page5.c
-  ${TEST_DIR}/page6.c
-  ${TEST_DIR}/page7.c
-  ${TEST_DIR}/page7a.c
-  ${TEST_DIR}/page7b.c
-  ${TEST_DIR}/page7c.c
-#  ${TEST_DIR}/page8.c
-#  ${TEST_DIR}/page9.c
-#  ${TEST_DIR}/page10.c
-  ${TEST_DIR}/page11.c
-  ${TEST_DIR}/page12.c
-  ${TEST_DIR}/page13.c
-  ${TEST_DIR}/page14.c
-  ${TEST_DIR}/page15.c
-  ${TEST_DIR}/page16.c
-  ${TEST_DIR}/spaced.c
-)
+##############################################################################
+# build test executables 
+##############################################################################
+if (LIBUI_BUILD_TESTS)
+  set(TEST_DIR ${libui_import_SOURCE_DIR}/test)
+  set(LIBUI_TEST_SOURCES 
+    ${TEST_DIR}/drawtests.c
+    ${TEST_DIR}/images.c
+    ${TEST_DIR}/main.c
+    ${TEST_DIR}/menus.c
+    ${TEST_DIR}/page1.c
+    ${TEST_DIR}/page2.c
+    ${TEST_DIR}/page3.c
+    ${TEST_DIR}/page4.c
+    ${TEST_DIR}/page5.c
+    ${TEST_DIR}/page6.c
+    ${TEST_DIR}/page7.c
+    ${TEST_DIR}/page7a.c
+    ${TEST_DIR}/page7b.c
+    ${TEST_DIR}/page7c.c
+  #  ${TEST_DIR}/page8.c
+  #  ${TEST_DIR}/page9.c
+  #  ${TEST_DIR}/page10.c
+    ${TEST_DIR}/page11.c
+    ${TEST_DIR}/page12.c
+    ${TEST_DIR}/page13.c
+    ${TEST_DIR}/page14.c
+    ${TEST_DIR}/page15.c
+    ${TEST_DIR}/page16.c
+    ${TEST_DIR}/spaced.c
+  )
 
-add_executable(tester ${LIBUI_TEST_SOURCES})
-target_link_libraries(tester ui ${LIBUI_LIBS})
+  add_executable(tester ${LIBUI_TEST_SOURCES})
+  target_link_libraries(tester ui ${LIBUI_LIBS})
+endif(LIBUI_BUILD_TESTS)
 
 install(TARGETS ui
         EXPORT libui
