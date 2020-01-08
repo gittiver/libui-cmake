@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.12)
+
 
 include(FetchContent)
-
 FetchContent_Declare(
   libui_import
   GIT_REPOSITORY https://github.com/andlabs/libui.git
@@ -14,9 +14,15 @@ if(NOT libui_import_POPULATED)
   FetchContent_Populate(libui_import)
 endif()
 
-enable_language(C CXX OBJC OBJCXX)
+if (APPLE)
+  enable_language(C CXX OBJC OBJCXX)
+else()
+  enable_language(C CXX)
+endif()
 
 project(libui)
+
+include(FindGTK)
 
 option(LIBUI_STATIC_LIB "build libui static library" ON)
 option(LIBUI_SHARED_LIB "build libui shared library" OFF)
@@ -95,6 +101,53 @@ set(LIBUI_SOURCES_DARWIN
   ${libui_import_SOURCE_DIR}/darwin/winmoveresize.m
 )
 
+set(LIBUI_SOURCES_GTK
+  ${libui_import_SOURCE_DIR}/unix/alloc.c
+  ${libui_import_SOURCE_DIR}/unix/area.c
+  ${libui_import_SOURCE_DIR}/unix/attrstr.c
+  ${libui_import_SOURCE_DIR}/unix/box.c
+  ${libui_import_SOURCE_DIR}/unix/button.c
+  ${libui_import_SOURCE_DIR}/unix/cellrendererbutton.c
+  ${libui_import_SOURCE_DIR}/unix/checkbox.c
+  ${libui_import_SOURCE_DIR}/unix/child.c
+  ${libui_import_SOURCE_DIR}/unix/colorbutton.c
+  ${libui_import_SOURCE_DIR}/unix/combobox.c
+  ${libui_import_SOURCE_DIR}/unix/control.c
+  ${libui_import_SOURCE_DIR}/unix/datetimepicker.c
+  ${libui_import_SOURCE_DIR}/unix/debug.c
+  ${libui_import_SOURCE_DIR}/unix/draw.c
+  ${libui_import_SOURCE_DIR}/unix/drawmatrix.c
+  ${libui_import_SOURCE_DIR}/unix/drawpath.c
+  ${libui_import_SOURCE_DIR}/unix/drawtext.c
+  ${libui_import_SOURCE_DIR}/unix/editablecombo.c
+  ${libui_import_SOURCE_DIR}/unix/entry.c
+  ${libui_import_SOURCE_DIR}/unix/fontbutton.c
+  ${libui_import_SOURCE_DIR}/unix/fontmatch.c
+  ${libui_import_SOURCE_DIR}/unix/form.c
+  ${libui_import_SOURCE_DIR}/unix/future.c
+  ${libui_import_SOURCE_DIR}/unix/graphemes.c
+  ${libui_import_SOURCE_DIR}/unix/grid.c
+  ${libui_import_SOURCE_DIR}/unix/group.c
+  ${libui_import_SOURCE_DIR}/unix/image.c
+  ${libui_import_SOURCE_DIR}/unix/label.c
+  ${libui_import_SOURCE_DIR}/unix/main.c
+  ${libui_import_SOURCE_DIR}/unix/menu.c
+  ${libui_import_SOURCE_DIR}/unix/multilineentry.c
+  ${libui_import_SOURCE_DIR}/unix/opentype.c
+  ${libui_import_SOURCE_DIR}/unix/progressbar.c
+  ${libui_import_SOURCE_DIR}/unix/radiobuttons.c
+  ${libui_import_SOURCE_DIR}/unix/separator.c
+  ${libui_import_SOURCE_DIR}/unix/slider.c
+  ${libui_import_SOURCE_DIR}/unix/spinbox.c
+  ${libui_import_SOURCE_DIR}/unix/stddialogs.c
+  ${libui_import_SOURCE_DIR}/unix/tab.c
+  ${libui_import_SOURCE_DIR}/unix/table.c
+  ${libui_import_SOURCE_DIR}/unix/tablemodel.c
+  ${libui_import_SOURCE_DIR}/unix/text.c
+  ${libui_import_SOURCE_DIR}/unix/util.c
+  ${libui_import_SOURCE_DIR}/unix/window.c
+)
+
 set(LIBUI_SOURCES_COMMON
   ${libui_import_SOURCE_DIR}/common/attribute.c
   ${libui_import_SOURCE_DIR}/common/attrlist.c
@@ -112,22 +165,47 @@ set(LIBUI_SOURCES_COMMON
 )
 
 #TODO set sources for gtk and windows
-set(LIBUI_SOURCES ${LIBUI_SOURCES_COMMON} ${LIBUI_SOURCES_DARWIN})
+if (APPLE)
+  set(LIBUI_SOURCES ${LIBUI_SOURCES_COMMON} ${LIBUI_SOURCES_DARWIN})
+elseif(UNIX)
+  set(LIBUI_SOURCES ${LIBUI_SOURCES_COMMON} ${LIBUI_SOURCES_GTK})
+elseif(MSVC)
+endif()
 
-set(LIBUI_LIBS_DARWIN "-framework Foundation" "-framework AppKit")
 #TODO set libs for gtk and windows
-set(LIBUI_LIBS ${LIBUI_LIBS_DARWIN})
+if (APPLE)
+  set(LIBUI_INCLUDE_DIRS ${libui_import_SOURCE_DIR})  
+  set(LIBUI_LIBS "-framework Foundation" "-framework AppKit")
+elseif(UNIX)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+  pkg_check_modules(PC_PANGO REQUIRED pango)
+  pkg_search_module(GLIB REQUIRED glib-2.0)
+  #  target_link_directories(${GTK3_LIBRARY_DIRS})
+    
+  set(LIBUI_INCLUDE_DIRS ${libui_import_SOURCE_DIR}
+                         ${GLIB_INCLUDE_DIRS}
+                         /usr/include/gtk-3.0
+			 /usr/include/pango-1.0
+			 /usr/include/cairo
+			 /usr/include/gdk-pixbuf-2.0
+			 /usr/include/atk-1.0
+			 )
+
+  set(LIBUI_LIBS ${GLIB_LIBRARIES} ${GTK3_LIBRARIES} m dl pthread)
+  set(LIBUI_DEFINITIONS ${GTK3_CFLAGS_OTHER} ${GLIB_CFLAGS_OTHER})
+endif()
 
 if (LIBUI_STATIC_LIB)
   add_library(ui STATIC ${LIBUI_SOURCES})
   target_link_libraries(ui ${LIBUI_LIBS})
-  target_include_directories(ui PUBLIC ${libui_import_SOURCE_DIR})
+  target_include_directories(ui PUBLIC ${LIBUI_INCLUDE_DIRS})
 endif(LIBUI_STATIC_LIB)
 
 if(LIBUI_SHARED_LIB)
   add_library(ui-shared SHARED ${LIBUI_SOURCES})
   target_link_libraries(ui-shared ${LIBUI_LIBS})
-  target_include_directories(ui-shared PUBLIC ${libui_import_SOURCE_DIR})
+  target_include_directories(ui-shared PUBLIC ${LIBUI_INCLUDE_DIRS})
   set_target_properties(ui-shared PROPERTIES OUTPUT_NAME ui)
 endif(LIBUI_SHARED_LIB)
 
@@ -145,12 +223,12 @@ if(LIBUI_BUILD_EXAMPLES)
 
   add_executable(cpp-multithread ${EXAMPLE_DIR}/cpp-multithread/main.cpp)
   target_link_libraries(cpp-multithread ui ${LIBUI_LIBS})
-    #   'deps':    [
-    #     dependency('threads',
+    #   deps:    [
+    #     dependency(threads,
     #       required: true),
     #   ],
-    #   'cpp_args':  libui_example_cpp_extra_args,
-    #   'link_args':  libui_example_cpp_extra_args,
+    #   cpp_args:  libui_example_cpp_extra_args,
+    #   link_args:  libui_example_cpp_extra_args,
     # },
   
   add_executable(drawtext ${EXAMPLE_DIR}/drawtext/main.c)
